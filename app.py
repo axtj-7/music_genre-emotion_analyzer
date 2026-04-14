@@ -198,11 +198,13 @@ if file:
     loader.empty()
     status_text.empty()
     
+    audio_bytes = open("temp.wav", "rb").read()
+    audio_base64 = base64.b64encode(audio_bytes).decode()
     import streamlit.components.v1 as components
 
     components.html(f"""
         <audio id="audio" controls style="width:100%">
-           <source src="temp.wav" type="audio/wav">
+           <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
         </audio>
         <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
         
