@@ -197,73 +197,85 @@ if file:
     time.sleep(0.5)
     loader.empty()
     status_text.empty()
-    audio_file = open("temp.wav", "rb").read()
-    audio_base64 = base64.b64encode(audio_file).decode()
+    
+    st.audio("temp.wav")
     
     import streamlit.components.v1 as components
 
     components.html(f"""
-    <audio id="audio" controls style="width:100%">
-      <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
-    </audio>
-    
-    <canvas id="eq" width="800" height="100" style="width:100%; margin-top:10px;"></canvas>
-    
-    <script>
-    const audio = document.getElementById('audio');
-    const canvas = document.getElementById('eq');
-    const ctx = canvas.getContext('2d');
-    
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const analyser = audioCtx.createAnalyser();
-    analyser.smoothingTimeConstant = 0.9;
-    const source = audioCtx.createMediaElementSource(audio);
-    
-    source.connect(analyser);
-    analyser.connect(audioCtx.destination);
-    
-    analyser.fftSize = 128;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    
-    function draw() {{
-        requestAnimationFrame(draw);
-    
-        analyser.getByteTimeDomainData(dataArray);  
-    
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
 
-        gradient.addColorStop(0, "#4facfe");
-        gradient.addColorStop(1, "#00f2fe");
-        const barWidth = (canvas.width / bufferLength);
-    
-        for (let i = 0; i < bufferLength; i++) {{
-    
-            let value = dataArray[i] / 128.0;   // normalize around center
-            let amplitude = (value - 1.0);      // -1 to +1
-    
-            let height = Math.abs(amplitude) * canvas.height * 0.8;
-    
-            // draw symmetric (top + bottom)
-            let x = i * barWidth;
-    
-            ctx.fillStyle = "rgba(0, 200, 255, 0.9)";
-    
-            // top
-            ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
-    
-            // bottom
-            ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
+        <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
+        
+        <script>
+        function getAudioElement() {{
+            return window.parent.document.querySelector("audio");
         }}
-    }}    
-    
-    audio.onplay = () => {{
-        audioCtx.resume();
-        draw();
-    }};
-    </script>
-    """, height=180)
+        
+        function waitForAudio(callback) {{
+            const interval = setInterval(() => {{
+                const audio = getAudioElement();
+                if (audio) {{
+                    clearInterval(interval);
+                    callback(audio);
+                }}
+            }}, 200);
+        }}
+        
+        waitForAudio((audio) => {{
+        
+            const canvas = document.getElementById('eq');
+            const ctx = canvas.getContext('2d');
+        
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const analyser = audioCtx.createAnalyser();
+            analyser.smoothingTimeConstant = 0.9;
+        
+            analyser.fftSize = 128;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+        
+            function draw() {{
+                requestAnimationFrame(draw);
+        
+                analyser.getByteTimeDomainData(dataArray);
+        
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+                let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                gradient.addColorStop(0, "#4facfe");
+                gradient.addColorStop(1, "#00f2fe");
+        
+                const barWidth = canvas.width / bufferLength;
+        
+                for (let i = 0; i < bufferLength; i++) {{
+        
+                    let value = dataArray[i] / 128.0;
+                    let amplitude = value - 1.0;
+        
+                    let height = Math.abs(amplitude) * canvas.height * 0.9;
+                    let x = i * barWidth;
+        
+                    ctx.fillStyle = gradient;
+        
+                    ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
+                    ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
+                }}
+            }}
+        
+            audio.onplay = () => {{
+                const source = audioCtx.createMediaElementSource(audio);
+        
+                source.connect(analyser);
+                analyser.connect(audioCtx.destination);
+        
+                audioCtx.resume();
+                draw();
+            }};
+        
+        }});
+        </script>
+        
+        """, height=220)
 
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
