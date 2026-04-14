@@ -220,7 +220,7 @@ if file:
         const analyser = audioCtx.createAnalyser();
         analyser.smoothingTimeConstant = 0.9;
         
-        analyser.fftSize = 128;
+        analyser.fftSize = 256;
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         
@@ -274,7 +274,7 @@ if file:
         document.addEventListener("click", startVisualizer);
         </script>
         
-        """, height=150)
+        """, height=200)
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
 
