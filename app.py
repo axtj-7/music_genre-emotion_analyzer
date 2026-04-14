@@ -207,6 +207,7 @@ if file:
         <audio id="audio" controls style="width:100%">
            <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
         </audio>
+        <br>
         <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
         
         <script>
@@ -273,7 +274,7 @@ if file:
         document.addEventListener("click", startVisualizer);
         </script>
         
-        """, height=400)
+        """, height=150)
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
 
