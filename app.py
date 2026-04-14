@@ -79,7 +79,7 @@ st.markdown("""
         display: flex;
         gap: 3px;
         width: max-content;
-        animation: moveWave 20s linear infinite;
+        animation: moveWave 30s linear infinite;
     }
     
     .bar {
@@ -87,7 +87,7 @@ st.markdown("""
         height: 80px;
         background: linear-gradient(to top, #ff00cc, #4facfe);
         animation: equalizer 1s infinite ease-in-out;
-        Transform-origin: bottom;   
+        transform-origin: bottom;   
     }
     
     .bar:nth-child(2n) { animation-duration: 0.9s; }
@@ -169,8 +169,8 @@ if file:
     loader.markdown("""
     <div class="waveform">
         <div class="wave-track">
-            """ + "".join([f'<div class="bar" style="--i:{i}"></div>' for i in range(800)]) + """
-            """ + "".join([f'<div class="bar" style="--i:{i}"></div>' for i in range(800)]) + """
+            """ + "".join([f'<div class="bar" style="--i:{i}"></div>' for i in range(1500)]) + """
+            """ + "".join([f'<div class="bar" style="--i:{i}"></div>' for i in range(1500)]) + """
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -197,7 +197,73 @@ if file:
     time.sleep(0.5)
     loader.empty()
     status_text.empty()
-    st.audio("temp.wav")
+    audio_file = open("temp.wav", "rb").read()
+    audio_base64 = base64.b64encode(audio_file).decode()
+    
+    import streamlit.components.v1 as components
+
+    components.html(f"""
+    <audio id="audio" controls style="width:100%">
+      <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+    </audio>
+    
+    <canvas id="eq" width="800" height="100" style="width:100%; margin-top:10px;"></canvas>
+    
+    <script>
+    const audio = document.getElementById('audio');
+    const canvas = document.getElementById('eq');
+    const ctx = canvas.getContext('2d');
+    
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    analyser.smoothingTimeConstant = 0.9;
+    const source = audioCtx.createMediaElementSource(audio);
+    
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    
+    analyser.fftSize = 128;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    function draw() {{
+        requestAnimationFrame(draw);
+    
+        analyser.getByteTimeDomainData(dataArray);  
+    
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+
+        gradient.addColorStop(0, "#4facfe");
+        gradient.addColorStop(1, "#00f2fe");
+        const barWidth = (canvas.width / bufferLength);
+    
+        for (let i = 0; i < bufferLength; i++) {{
+    
+            let value = dataArray[i] / 128.0;   // normalize around center
+            let amplitude = (value - 1.0);      // -1 to +1
+    
+            let height = Math.abs(amplitude) * canvas.height * 0.8;
+    
+            // draw symmetric (top + bottom)
+            let x = i * barWidth;
+    
+            ctx.fillStyle = "rgba(0, 200, 255, 0.9)";
+    
+            // top
+            ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
+    
+            // bottom
+            ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
+        }}
+    }}    
+    
+    audio.onplay = () => {{
+        audioCtx.resume();
+        draw();
+    }};
+    </script>
+    """, height=180)
 
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
@@ -341,7 +407,7 @@ if file:
         def chroma():
             c = librosa.feature.chroma_stft(y=y, sr=sr)
         
-            fig, ax = plt.subplots(figsize=(8,3))  # 🔥 FIX SIZE
+            fig, ax = plt.subplots(figsize=(8,3))
         
             img = librosa.display.specshow(
                 c,
@@ -357,9 +423,9 @@ if file:
             ax.set_xlabel("Time (seconds)")
             ax.set_ylabel("Pitch Class")
         
-            ax.tick_params(labelsize=8)  # 🔥 readable labels
+            ax.tick_params(labelsize=8)  
         
-            plt.tight_layout()  # 🔥 prevents cutting
+            plt.tight_layout()  
         
             st.pyplot(fig)
         chroma()
@@ -369,11 +435,11 @@ if file:
         def mfcc():
             m = librosa.feature.mfcc(y=y, sr=sr)
         
-            fig, ax = plt.subplots(figsize=(8,3))  # 🔥 consistent size
+            fig, ax = plt.subplots(figsize=(8,3))  
         
             img = librosa.display.specshow(
                 m,
-                sr=sr,                    # 🔥 IMPORTANT FIX
+                sr=sr,                    
                 x_axis='time',
                 ax=ax
             )
