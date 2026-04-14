@@ -198,84 +198,67 @@ if file:
     loader.empty()
     status_text.empty()
     
-    st.audio("temp.wav")
-    
     import streamlit.components.v1 as components
 
     components.html(f"""
-
+        <audio id="audio" controls style="width:100%">
+           <source src="temp.wav" type="audio/wav">
+        </audio>
         <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
         
         <script>
-        function getAudioElement() {{
-            return window.parent.document.querySelector("audio");
-        }}
+        const audio = document.getElementById("audio");
+
+        const canvas = document.getElementById('eq');
+        const ctx = canvas.getContext('2d');
         
-        function waitForAudio(callback) {{
-            const interval = setInterval(() => {{
-                const audio = getAudioElement();
-                if (audio) {{
-                    clearInterval(interval);
-                    callback(audio);
-                }}
-            }}, 200);
-        }}
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioCtx.createAnalyser();
+        analyser.smoothingTimeConstant = 0.9;
         
-        waitForAudio((audio) => {{
+        analyser.fftSize = 128;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
         
-            const canvas = document.getElementById('eq');
-            const ctx = canvas.getContext('2d');
+        function draw() {{
+            requestAnimationFrame(draw);
         
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const analyser = audioCtx.createAnalyser();
-            analyser.smoothingTimeConstant = 0.9;
+            analyser.getByteTimeDomainData(dataArray);
         
-            analyser.fftSize = 128;
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-            function draw() {{
-                requestAnimationFrame(draw);
+            let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, "#4facfe");
+            gradient.addColorStop(1, "#00f2fe");
         
-                analyser.getByteTimeDomainData(dataArray);
+            const barWidth = canvas.width / bufferLength;
         
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < bufferLength; i++) {{
+                let value = dataArray[i] / 128.0;
+                let amplitude = value - 1.0;
         
-                let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                gradient.addColorStop(0, "#4facfe");
-                gradient.addColorStop(1, "#00f2fe");
+                let height = Math.abs(amplitude) * canvas.height * 0.9;
+                let x = i * barWidth;
         
-                const barWidth = canvas.width / bufferLength;
+                ctx.fillStyle = gradient;
         
-                for (let i = 0; i < bufferLength; i++) {{
-        
-                    let value = dataArray[i] / 128.0;
-                    let amplitude = value - 1.0;
-        
-                    let height = Math.abs(amplitude) * canvas.height * 0.9;
-                    let x = i * barWidth;
-        
-                    ctx.fillStyle = gradient;
-        
-                    ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
-                    ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
-                }}
+                ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
+                ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
             }}
+        }}
         
-            audio.onplay = () => {{
-                const source = audioCtx.createMediaElementSource(audio);
+        audio.onplay = () => {{
+            const source = audioCtx.createMediaElementSource(audio);
         
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination);
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
         
-                audioCtx.resume();
-                draw();
-            }};
-        
-        }});
+            audioCtx.resume();
+            draw();
+        }};
         </script>
         
-        """, height=220)
+        """, height=180)
 
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
