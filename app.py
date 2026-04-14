@@ -6,6 +6,7 @@ import librosa
 import librosa.display
 import numpy as np
 import joblib
+import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from collections import Counter
 from predict_genre import predict as predict_genre
@@ -200,79 +201,6 @@ if file:
     
     audio_bytes = open("temp.wav", "rb").read()
     audio_base64 = base64.b64encode(audio_bytes).decode()
-    import streamlit.components.v1 as components
-
-    components.html(f"""
-        <audio id="audio" controls style="width:100%">
-           <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
-        </audio>
-        <p style="color:white;">Visualizer Loaded</p>
-        <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
-        
-        <script>
-        const audio = document.getElementById("audio");
-
-        const canvas = document.getElementById('eq');
-        const ctx = canvas.getContext('2d');
-        
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const analyser = audioCtx.createAnalyser();
-        analyser.smoothingTimeConstant = 0.9;
-        
-        analyser.fftSize = 128;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        
-        function draw() {{
-            requestAnimationFrame(draw);
-        
-            analyser.getByteTimeDomainData(dataArray);
-        
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-            let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, "#4facfe");
-            gradient.addColorStop(1, "#00f2fe");
-        
-            const barWidth = canvas.width / bufferLength;
-        
-            for (let i = 0; i < bufferLength; i++) {{
-                let value = dataArray[i] / 128.0;
-                let amplitude = value - 1.0;
-        
-                let height = Math.abs(amplitude) * canvas.height * 0.9;
-                let x = i * barWidth;
-        
-                ctx.fillStyle = gradient;
-        
-                ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
-                ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
-            }}
-        }}
-        
-        let started = false;
-
-        function startVisualizer() {{
-            if (started) return;
-            started = true;
-        
-            const source = audioCtx.createMediaElementSource(audio);
-        
-            source.connect(analyser);
-            analyser.connect(audioCtx.destination);
-        
-            audioCtx.resume();
-            draw();
-        }}
-        
-        // trigger on play
-        audio.addEventListener("play", startVisualizer);
-        
-        // ALSO trigger on click (important for Streamlit)
-        document.addEventListener("click", startVisualizer);
-        </script>
-        
-        """, height=180)
 
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
@@ -522,3 +450,76 @@ if file:
         The genre model uses deep learning on spectrograms, while the emotion model 
         uses feature-based learning, enabling accurate and reliable predictions.
         """)
+        st.write("RENDERING HTML")
+        st.markdown("---")
+        components.html(f"""
+        <audio id="audio" controls style="width:100%">
+           <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
+        </audio>
+        <p style="color:white;">Visualizer Loaded</p>
+        <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
+        
+        <script>
+        const audio = document.getElementById("audio");
+
+        const canvas = document.getElementById('eq');
+        const ctx = canvas.getContext('2d');
+        
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioCtx.createAnalyser();
+        analyser.smoothingTimeConstant = 0.9;
+        
+        analyser.fftSize = 128;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        function draw() {{
+            requestAnimationFrame(draw);
+        
+            analyser.getByteTimeDomainData(dataArray);
+        
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+            let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, "#4facfe");
+            gradient.addColorStop(1, "#00f2fe");
+        
+            const barWidth = canvas.width / bufferLength;
+        
+            for (let i = 0; i < bufferLength; i++) {{
+                let value = dataArray[i] / 128.0;
+                let amplitude = value - 1.0;
+        
+                let height = Math.abs(amplitude) * canvas.height * 0.9;
+                let x = i * barWidth;
+        
+                ctx.fillStyle = gradient;
+        
+                ctx.fillRect(x, canvas.height/2 - height, barWidth - 2, height);
+                ctx.fillRect(x, canvas.height/2, barWidth - 2, height);
+            }}
+        }}
+        
+        let started = false;
+
+        function startVisualizer() {{
+            if (started) return;
+            started = true;
+        
+            const source = audioCtx.createMediaElementSource(audio);
+        
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+        
+            audioCtx.resume();
+            draw();
+        }}
+        
+        // trigger on play
+        audio.addEventListener("play", startVisualizer);
+        
+        // ALSO trigger on click (important for Streamlit)
+        document.addEventListener("click", startVisualizer);
+        </script>
+        
+        """, height=400)
