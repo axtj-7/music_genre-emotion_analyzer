@@ -232,8 +232,8 @@ if file:
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         
             let gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, "#4facfe");
-            gradient.addColorStop(1, "#00f2fe");
+            gradient.addColorStop(0, "#ff00cc");   // pink
+            gradient.addColorStop(1, "#7b2ff7");   // purple
             ctx.shadowBlur = 10;
             ctx.shadowColor = "#00f2fe";
             const barWidth = canvas.width / bufferLength;
