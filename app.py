@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 import os
 import sys
 import librosa
@@ -52,11 +53,56 @@ set_bg("bg.jpeg")
 
 st.markdown("""
 <style>
-.css-1d391kg {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-}
+    .css-1d391kg {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+    }
+    
+    /* Waveform */
+    .waveform {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;  /* bars grow UP from bottom */
+    justify-content: center;
+    overflow: hidden;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.8;
+   }
+
+    .wave-track {
+        display: flex;
+        gap: 3px;
+        width: max-content;
+        animation: moveWave 20s linear infinite;
+    }
+    
+    .bar {
+        width: 4px;
+        height: 80px;
+        background: linear-gradient(to top, #ff00cc, #4facfe);
+        animation: equalizer 1s infinite ease-in-out;
+        Transform-origin: bottom;   
+    }
+    
+    .bar:nth-child(2n) { animation-duration: 0.9s; }
+    .bar:nth-child(3n) { animation-duration: 1.1s; }
+    .bar:nth-child(4n) { animation-duration: 0.8s; }
+    .bar:nth-child(5n) { animation-duration: 1.2s; }
+    
+    @keyframes equalizer {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1.2); }
+    }
+    @keyframes moveWave {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(50%); }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -114,24 +160,44 @@ file = st.file_uploader("Upload audio", type=["wav", "mp3"])
 
 if file:
 
+    loader = st.empty()
+    status_text = st.empty()
+
     with open("temp.wav", "wb") as f:
-        f.write(file.read())
+        f.write(file.read()) #save file
 
-    st.audio("temp.wav")
+    loader.markdown("""
+    <div class="waveform">
+        <div class="wave-track">
+            """ + "".join([f'<div class="bar" style="--i:{i}"></div>' for i in range(800)]) + """
+            """ + "".join([f'<div class="bar" style="--i:{i}"></div>' for i in range(800)]) + """
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
+    
+    status_text.markdown("### 🎧 Extracting audio signal...")
     y, sr = librosa.load("temp.wav", sr=22050)
-
-    # ------------------ PREDICTIONS ------------------
+    time.sleep(0.5)
+    status_text.markdown("### ⚡ Extracting features...")
     time_points, emotions = predict_emotion_timeline("temp.wav")
     percent = get_distribution(emotions)
-
+    time.sleep(0.5)
+    status_text.markdown("### 🧠 Analyzing emotion...")
     all_emotions = ['sad', 'calm', 'happy', 'angry']
     values = [percent.get(e, 0) for e in all_emotions]
-
+    time.sleep(0.5)
     overall_emotion = max(percent, key=percent.get)
     emotion_conf = percent[overall_emotion]
-
+    time.sleep(0.5)
+    status_text.markdown("### 🎼 Classifying genre...")
     genre, genre_conf = predict_genre("temp.wav")
+    time.sleep(0.5)
+    status_text.markdown("### ✅ Analysis complete!")
+    time.sleep(0.5)
+    loader.empty()
+    status_text.empty()
+    st.audio("temp.wav")
 
     # ------------------ CARDS ------------------
     col1, col2 = st.columns(2)
@@ -357,25 +423,6 @@ if file:
     
         st.caption("This visual representation of sound is used by the CNN to detect genre.")
 
-        section("🔍 What the AI Found")
-        feature_dict, _ = extract_audio_features(y=y, sr=sr)
-    
-        tempo = feature_dict["tempo"]
-        energy = feature_dict["energy"]
-        insights = []
-    
-        if tempo > 120:
-            insights.append("In this track, the fast tempo suggests a high-energy composition.")
-        else:
-            insights.append("In this track, the slower tempo suggests a calm and relaxed feel.")
-    
-        if energy > 0.1:
-            insights.append("In this track, the high energy suggests strong and intense sections.")
-        else:
-            insights.append("In this track, the low energy suggests soft and smooth audio.")
-    
-        for i in insights:
-            st.markdown(f"- {i}")
 
     with col6:
         # ----------- SECTION 1 -----------
