@@ -206,6 +206,7 @@ if file:
         <audio id="audio" controls style="width:100%">
            <source src="data:audio/wav;base64,{audio_base64}" type="audio/wav">
         </audio>
+        <p style="color:white;">Visualizer Loaded</p>
         <canvas id="eq" width="800" height="120" style="width:100%; margin-top:10px;"></canvas>
         
         <script>
@@ -249,7 +250,12 @@ if file:
             }}
         }}
         
-        audio.onplay = () => {{
+        let started = false;
+
+        function startVisualizer() {{
+            if (started) return;
+            started = true;
+        
             const source = audioCtx.createMediaElementSource(audio);
         
             source.connect(analyser);
@@ -257,7 +263,13 @@ if file:
         
             audioCtx.resume();
             draw();
-        }};
+        }}
+        
+        // trigger on play
+        audio.addEventListener("play", startVisualizer);
+        
+        // ALSO trigger on click (important for Streamlit)
+        document.addEventListener("click", startVisualizer);
         </script>
         
         """, height=180)
