@@ -68,7 +68,7 @@ st.markdown("""
     width: 100%;
     height: 80px;
     display: flex;
-    align-items: flex-end;  /* bars grow UP from bottom */
+    align-items: flex-end;
     justify-content: center;
     overflow: hidden;
     z-index: 999;
