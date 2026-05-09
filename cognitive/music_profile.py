@@ -109,26 +109,3 @@ def build_music_profile(feature_dict, emotion, genre):
     }
 
     return profile
-
-
-# ---------------- TEST ----------------
-
-if __name__ == "__main__":
-
-    sample_feature_dict = {
-        "tempo": 145,
-        "energy": 0.09,
-        "spectral_centroid": 4500,
-        "spectral_bandwidth": 3200,
-        "zcr": 0.15
-    }
-
-    profile = build_music_profile(
-        feature_dict=sample_feature_dict,
-        emotion="angry",
-        genre="rock"
-    )
-
-    print("\nMUSIC PROFILE\n")
-    for k, v in profile.items():
-        print(f"{k}: {v}")

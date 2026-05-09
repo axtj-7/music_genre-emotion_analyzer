@@ -1,7 +1,7 @@
-from music_profile import build_music_profile
-from compatibility_rules import evaluate_context
-
-
+from .music_profile import build_music_profile
+from .compatibility_rules import evaluate_context
+from .explain import generate_behavioral_analysis
+from .scores import calculate_cognition_scores
 def generate_explanation(result):
 
     score = result["score"]
@@ -59,6 +59,7 @@ def generate_recommendation(result):
 
 def analyze_music_context(
         feature_dict,
+        emotions,
         emotion,
         genre,
         user_mood,
@@ -93,6 +94,13 @@ def analyze_music_context(
         compatibility_result
     )
 
+    behavioral_analysis = generate_behavioral_analysis(
+        profile=profile,
+        emotions=emotions
+    )
+
+    cognition_scores = calculate_cognition_scores(profile, emotions)
+
     # ---------------- FINAL RESPONSE ----------------
 
     final_output = {
@@ -111,53 +119,15 @@ def analyze_music_context(
             explanation,
 
         "recommendation":
-            recommendation
+            recommendation,
+        
+        "behavioral_analysis": 
+            behavioral_analysis,
+
+        "cognition_scores":
+            cognition_scores
     }
 
     return final_output
 
 
-# ---------------- TEST ----------------
-
-if __name__ == "__main__":
-
-    sample_feature_dict = {
-        "tempo": 145,
-        "energy": 0.09,
-        "spectral_centroid": 4500,
-        "spectral_bandwidth": 3200,
-        "zcr": 0.15
-    }
-
-    result = analyze_music_context(
-        feature_dict=sample_feature_dict,
-
-        emotion="angry",
-        genre="rock",
-
-        user_mood="stressed",
-        activity="studying",
-        goal="improve focus"
-    )
-
-    print("\nFINAL CONTEXTUAL ANALYSIS\n")
-
-    print("Compatibility Score:",
-          result["compatibility_score"])
-
-    print("Alignment:",
-          result["alignment"])
-
-    print("\nSummary:")
-    print(result["summary"])
-
-    print("\nRecommendation:")
-    print(result["recommendation"])
-
-    print("\nReasons:")
-    for reason in result["reasons"]:
-        print("-", reason)
-
-    print("\nMusic Profile:")
-    for k, v in result["music_profile"].items():
-        print(f"{k}: {v}")

@@ -186,34 +186,3 @@ def evaluate_context(profile, user_mood, activity, goal):
     }
 
 
-# ---------------- TEST ----------------
-
-if __name__ == "__main__":
-
-    sample_profile = {
-        "genre": "rock",
-        "emotion": "angry",
-        "tempo_type": "fast",
-        "energy_level": "high",
-        "brightness": "bright",
-        "texture": "noisy",
-        "bandwidth": "wide",
-        "stimulation_level": "intense",
-        "focus_suitability": "low"
-    }
-
-    result = evaluate_context(
-        profile=sample_profile,
-        user_mood="stressed",
-        activity="studying",
-        goal="improve focus"
-    )
-
-    print("\nCONTEXT ANALYSIS\n")
-
-    print("Score:", result["score"])
-    print("Alignment:", result["alignment"])
-
-    print("\nReasons:")
-    for r in result["reasons"]:
-        print("-", r)

@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from collections import Counter
 from predict_genre import predict as predict_genre
-
+from cognitive.context_engine import analyze_music_context
 # ------------------ CONFIG ------------------
 st.set_page_config(layout="centered")
 
@@ -156,7 +156,46 @@ def plot_centered(fig_func):
 
 
 # ------------------ MAIN ------------------
+st.subheader("🧠 User Context")
 
+col_a, col_b, col_c = st.columns(3)
+
+with col_a:
+    user_mood = st.selectbox(
+        "Current Mood",
+        [
+            "stressed",
+            "sad",
+            "calm",
+            "happy",
+            "motivated",
+            "tired"
+        ]
+    )
+
+with col_b:
+    activity = st.selectbox(
+        "Current Activity",
+        [
+            "studying",
+            "working",
+            "gym",
+            "sleeping",
+            "meditation",
+            "relaxation"
+        ]
+    )
+
+with col_c:
+    goal = st.selectbox(
+        "Desired Outcome",
+        [
+            "improve focus",
+            "relax",
+            "boost energy",
+            "maintain mood"
+        ]
+    )
 file = st.file_uploader("Upload audio", type=["wav", "mp3"])
 
 if file:
@@ -194,6 +233,17 @@ if file:
     status_text.markdown("### 🎼 Classifying genre...")
     genre, genre_conf = predict_genre("temp.wav")
     time.sleep(0.5)
+    feature_dict, _ = extract_audio_features(y=y, sr=sr)
+    context_result = analyze_music_context(
+        feature_dict=feature_dict,
+        emotions=emotions,
+        emotion=overall_emotion,
+        genre=genre,
+    
+        user_mood=user_mood,
+        activity=activity,
+        goal=goal
+    )
     status_text.markdown("### ✅ Analysis complete!")
     time.sleep(0.5)
     loader.empty()
@@ -295,7 +345,55 @@ if file:
             <div>{emotion_conf:.1f}% confidence</div>
         </div>
         """, unsafe_allow_html=True)
+    # ---------------- CONTEXTUAL AI ----------------
+
+    st.subheader("🧠 Contextual Music Intelligence")
     
+    score = context_result["compatibility_score"]
+    
+    if score >= 80:
+        color = "#22c55e"
+    
+    elif score >= 60:
+        color = "#eab308"
+    
+    else:
+        color = "#ef4444"
+    
+    st.markdown(
+        f"""
+        <div style="
+            background: rgba(255,255,255,0.05);
+            padding: 1.5rem;
+            border-radius: 18px;
+            margin-top: 10px;
+        ">
+    
+        <h2>
+            Compatibility Score:
+            <span style="color:{color}">
+                {score}%
+            </span>
+        </h2>
+    
+        <h3>
+            {context_result["alignment"]}
+        </h3>
+    
+        <p>
+            {context_result["summary"]}
+        </p>
+    
+        <p>
+            <strong>Recommendation:</strong>
+            {context_result["recommendation"]}
+        </p>
+    
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     # timeline
     st.subheader("📈 Emotion Timeline")
 
@@ -308,7 +406,94 @@ if file:
     ax.set_yticklabels(all_emotions)
 
     st.pyplot(fig)
+    st.markdown("### 🧠 Behavioral Music Analysis")
+
+    for point in context_result["behavioral_analysis"]:
+        st.markdown(f"- {point}")
+    st.subheader("🧠 Music Cognition Metrics")
+
+    scores = context_result["cognition_scores"]
     
+    metric_cols = st.columns(len(scores))
+    
+    for col, (label, value) in zip(metric_cols, scores.items()):
+        with col:
+            radius = 38
+            circumference = 2 * 3.1416 * radius
+            offset = circumference - (value / 100) * circumference
+    
+            components.html(f"""
+            <style>
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{
+                    background: transparent;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    width: 100%;
+                }}
+                .card {{
+                    background: rgba(255,255,255,0.05);
+                    border-radius: 20px;
+                    width: 100%;
+                    height: 190px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                }}
+                svg {{
+                    display: block;
+                }}
+                p {{
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: white;
+                    text-align: center;
+                    padding: 0 6px;
+                }}
+            </style>
+    
+            <div class="card">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+    
+                    <circle
+                        cx="50" cy="50" r="{radius}"
+                        stroke="rgba(255,255,255,0.1)"
+                        stroke-width="12"
+                        fill="none"
+                    />
+    
+                    <circle
+                        cx="50" cy="50" r="{radius}"
+                        stroke="#22c55e"
+                        stroke-width="12"
+                        fill="none"
+                        stroke-linecap="butt"
+                        stroke-dasharray="{circumference}"
+                        stroke-dashoffset="{offset}"
+                        transform="rotate(-90 50 50)"
+                    />
+    
+                    <text
+                        x="50" y="50"
+                        dominant-baseline="middle"
+                        text-anchor="middle"
+                        fill="white"
+                        font-size="16"
+                        font-weight="bold"
+                    >
+                        {value}%
+                    </text>
+    
+                </svg>
+    
+                <p>{label}</p>
+            </div>
+            """, height=210)
+        
     col3, col4 = st.columns(2)
 
     with col3:
@@ -332,9 +517,6 @@ if file:
 
     with col4:
         st.subheader("🎼 Audio Characteristics")
-    
-        feature_dict, _ = extract_audio_features(y=y, sr=sr)
-    
         # Normalize values to percentage scale (0–100)
         energy = feature_dict["energy"] * 100
         brightness = feature_dict["spectral_centroid"] / 50   # scaled
