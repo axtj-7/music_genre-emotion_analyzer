@@ -17,7 +17,7 @@ def get_overall_emotion(emotions):
     return overall, count
 
 # Load model + scaler
-model = joblib.load("models/emotion_model.pkl")
+model = joblib.load("e/models/emotion_model.pkl")
 
 CHUNK_DURATION = 7  # seconds
 

@@ -62,7 +62,7 @@ class CNN(nn.Module):
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
 model = CNN(num_classes).to(device)
-model.load_state_dict(torch.load("models/model.pth", map_location=device))
+model.load_state_dict(torch.load("g/models/model.pth", map_location=device))
 model.eval()
 
 # -----------------------------

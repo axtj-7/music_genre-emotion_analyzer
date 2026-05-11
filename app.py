@@ -20,7 +20,7 @@ from g.audio_feature import extract_audio_features
 from e.predict_emo import predict_emotion_timeline
 
 # load models
-emotion_model = joblib.load("models/emotion_model.pkl")
+emotion_model = joblib.load("e/models/emotion_model.pkl")
 
 import base64
 
