@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from genre.model_architecture import CNN
 from torchvision import transforms
 from PIL import Image
 import os
@@ -7,53 +7,13 @@ from collections import Counter
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-from g.audio_to_img import audio_to_image
+from audio_to_img import audio_to_image
 
 # -----------------------------
 # CLASS NAMES (must match training folders)
 # -----------------------------
 class_names = ['classical', 'hiphop', 'jazz', 'pop', 'rock']
 num_classes = len(class_names)
-
-# -----------------------------
-# MODEL (same as training)
-# -----------------------------
-class CNN(nn.Module):
-    def __init__(self, num_classes):
-        super(CNN, self).__init__()
-
-        self.conv = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2)
-        )
-
-        self.pool = nn.AdaptiveAvgPool2d((1, 1))  # 🔥 KEY FIX
-
-        self.fc = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Dropout(0.4),
-            nn.Linear(128, num_classes)
-        )
-
-    def forward(self, x):
-        x = self.conv(x)
-        x = self.pool(x)
-        x = self.fc(x)
-        return x
 
 
 # -----------------------------
@@ -62,7 +22,7 @@ class CNN(nn.Module):
 device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
 
 model = CNN(num_classes).to(device)
-model.load_state_dict(torch.load("g/models/model.pth", map_location=device))
+model.load_state_dict(torch.load("genre/models/model.pth", map_location=device))
 model.eval()
 
 # -----------------------------

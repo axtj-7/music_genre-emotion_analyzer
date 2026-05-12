@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # Fix import path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from g.audio_feature import extract_audio_features
+from genre.audio_feature import extract_audio_features
 
 from collections import Counter
 
@@ -17,7 +17,7 @@ def get_overall_emotion(emotions):
     return overall, count
 
 # Load model + scaler
-model = joblib.load("e/models/emotion_model.pkl")
+model = joblib.load("emotion/models/emotion_model.pkl")
 
 CHUNK_DURATION = 7  # seconds
 

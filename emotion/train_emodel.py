@@ -27,7 +27,7 @@ sys.path.append(
     )
 )
 
-from g.audio_feature import extract_audio_features
+from genre.audio_feature import extract_audio_features
 
 # -----------------------------------
 # LOAD CSV

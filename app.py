@@ -9,18 +9,18 @@ import joblib
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from collections import Counter
-from predict_genre import predict as predict_genre
+from genre.predict_genre import predict as predict_genre
 from cognitive.context_engine import analyze_music_context
 # ------------------ CONFIG ------------------
 st.set_page_config(layout="centered")
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from g.audio_feature import extract_audio_features
-from e.predict_emo import predict_emotion_timeline
+from genre.audio_feature import extract_audio_features
+from emotion.predict_emo import predict_emotion_timeline
 
 # load models
-emotion_model = joblib.load("e/models/emotion_model.pkl")
+emotion_model = joblib.load("emotion/models/emotion_model.pkl")
 
 import base64
 
